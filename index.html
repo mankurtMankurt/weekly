@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hebrew Date & Torah Portion</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    .date-container, .torah-container {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Today's Date & Weekly Torah Portion</h1>
+  <div class="date-container">
+    <h2>Today's Gregorian Date</h2>
+    <p id="gregorian-date"></p>
+
+    <h2>Today's Hebrew Date</h2>
+    <p id="hebrew-date"></p>
+  </div>
+
+  <div class="torah-container">
+    <h2>This Week's Torah Portion</h2>
+    <p id="torah-portion"></p>
+
+    <div class="nav">
+      <button id="prev-portion">Previous Portion</button>
+      <button id="next-portion">Next Portion</button>
+    </div>
+  </div>
+
+  <script>
+    // Function to get today's Gregorian date
+    function getTodayGregorianDate() {
+      const today = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      return today.toLocaleDateString('en-US', options);
+    }
+
+    // Function to get Hebrew date and Torah portion
+    async function fetchHebrewDateAndTorahPortion() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1; // JavaScript months are 0-11
+      const day = today.getDate();
+
+      try {
+        // Fetch Hebrew date and Torah portion from Hebcal API
+        const response = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${year}&gm=${month}&gd=${day}&g2h=1`);
+        const data = await response.json();
+
+        // Display Hebrew date
+        const hebrewDate = data.hebrew;
+        document.getElementById('hebrew-date').textContent = hebrewDate;
+
+        // Fetch Torah portion using the Torah reading API
+        const torahResponse = await fetch(`https://www.hebcal.com/leyning?cfg=json&start=${data.hdate}&end=${data.hdate}`);
+        const torahData = await torahResponse.json();
+
+        // Display current Torah portion
+        const portion = torahData.items.find(item => item.category === "parashat");
+        if (portion) {
+          document.getElementById('torah-portion').textContent = portion.hebrew + " (" + portion.title + ")";
+        }
+
+        // Display previous and next portions on button click
+        document.getElementById('prev-portion').addEventListener('click', () => {
+          const prevPortion = torahData.previous;
+          if (prevPortion) {
+            alert(`Previous Portion: ${prevPortion.hebrew} (${prevPortion.title})`);
+          } else {
+            alert('No previous portion available.');
+          }
+        });
+
+        document.getElementById('next-portion').addEventListener('click', () => {
+          const nextPortion = torahData.next;
+          if (nextPortion) {
+            alert(`Next Portion: ${nextPortion.hebrew} (${nextPortion.title})`);
+          } else {
+            alert('No next portion available.');
+          }
+        });
+
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    }
+
+    // Display today's Gregorian date on load
+    document.getElementById('gregorian-date').textContent = getTodayGregorianDate();
+
+    // Fetch and display Hebrew date and Torah portion on load
+    fetchHebrewDateAndTorahPortion();
+  </script>
+</body>
+</html>
