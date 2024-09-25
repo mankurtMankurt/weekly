@@ -72,21 +72,21 @@
         const hebrewDate = data.hebrew;
         document.getElementById('hebrew-date').textContent = hebrewDate;
 
-        // Fetch Torah portion using the Torah reading API
-        const torahResponse = await fetch(`https://www.hebcal.com/leyning?cfg=json&start=${year}-${month}-${day}`);
+        // Fetch Torah portion using the Torah reading API for this week (Shabbat)
+        const torahResponse = await fetch(`https://www.hebcal.com/shabbat/?cfg=json&geo=geoname&latitude=32.0853&longitude=34.7818&m=50`);
         const torahData = await torahResponse.json();
 
-        // Find and display the current Torah portion
+        // Extract the current week's Torah portion
         const portion = torahData.items.find(item => item.category === "parashat");
         if (portion) {
           document.getElementById('torah-portion').textContent = portion.hebrew + " (" + portion.title + ")";
         } else {
-          document.getElementById('torah-portion').textContent = "No portion found for today.";
+          document.getElementById('torah-portion').textContent = "No Torah portion found for this week.";
         }
 
         // Display previous and next portions on button click
         document.getElementById('prev-portion').addEventListener('click', () => {
-          const prevPortion = torahData.previous;
+          const prevPortion = torahData.items.find(item => item.category === "parashat" && item.memo === "Previous portion");
           if (prevPortion) {
             alert(`Previous Portion: ${prevPortion.hebrew} (${prevPortion.title})`);
           } else {
@@ -95,7 +95,7 @@
         });
 
         document.getElementById('next-portion').addEventListener('click', () => {
-          const nextPortion = torahData.next;
+          const nextPortion = torahData.items.find(item => item.category === "parashat" && item.memo === "Next portion");
           if (nextPortion) {
             alert(`Next Portion: ${nextPortion.hebrew} (${nextPortion.title})`);
           } else {
